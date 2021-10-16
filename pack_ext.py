@@ -20,13 +20,11 @@ EXCLUDED = [(None,None,'ignorethisfile.txt'),(None,'notme',None),
 
 def package(overwrite):
     removeTempDir()
-    if overwrite:
-        click.echo("Overwriting...")
     createTempDir()
     filesystemProcess()
     # readPath()
-    # archive('test2')
-    # removeTempDir()
+    archive('test2',overwrite)
+    removeTempDir()
 
 """
     TO DO:
@@ -91,6 +89,31 @@ def createDirectories(path,directory_list):
             newDir = os.path.join(TEMPDIRECTORY,dir)
             os.mkdir(newDir)
 
+def archive(archiveName,overwrite):
+    os.chdir(TEMPDIRECTORY)
+    outputDirectory = os.path.join(PARENTDIRECTORY,'releases')
+    if os.path.isdir(outputDirectory):
+        pass
+    else:
+        os.mkdir(outputDirectory)
+    
+    outputFile = os.path.join(outputDirectory,archiveName)
+
+    if overwrite:
+        shutil.make_archive(outputFile, 'zip', TEMPDIRECTORY)
+    else:
+        if os.path.isfile(outputFile+'.zip'):
+            click.echo("An archive file already exists for the current version...")
+            if click.confirm("Would you like to continue?: "):
+                click.echo("Overwriting existing archive...")
+                shutil.make_archive(outputFile, 'zip', TEMPDIRECTORY)
+            else:
+                pass
+        else:
+            shutil.make_archive(outputFile, 'zip', TEMPDIRECTORY)
+    
+    os.chdir(PARENTDIRECTORY)
+
 #### UTILITY FUNCTIONS ####
 
 def debugPrint(path,directory_list,file_list):
@@ -105,16 +128,6 @@ def createTempDir():
 def removeTempDir():
     if os.path.isdir(TEMPDIRECTORY):
         shutil.rmtree(TEMPDIRECTORY)
-
-def archive(archiveName):
-    os.chdir(TEMPDIRECTORY)
-    outputDirectory = os.path.join(PARENTDIRECTORY,'releases')
-    if os.path.isdir(outputDirectory):
-        pass
-    else:
-        os.mkdir(outputDirectory)
-    outputFile = os.path.join(outputDirectory,archiveName)
-    shutil.make_archive(outputFile, 'zip', TEMPDIRECTORY)
 
 def readPath(root):
     lenPar = len(str(PARENTDIRECTORY))
