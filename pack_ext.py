@@ -41,7 +41,6 @@ def filesystemProcess():
             path = None
         removeIgnoredFiles(path,files)
         removeIgnoredDirectories(path,dirs)
-        # debugPrint(path,dirs,files)
         createDirectories(path,dirs)
         copyFiles(path,files)
 
@@ -99,7 +98,7 @@ def archive(archiveName,overwrite):
         shutil.make_archive(outputFile, 'zip', TEMPDIRECTORY)
     else:
         if os.path.isfile(outputFile+'.zip'):
-            click.echo("An archive file already exists for the current version...")
+            click.echo("An archive file already exists for: \"" + archiveName + '.zip\"')
             if click.confirm("Would you like to continue?: "):
                 click.echo("Overwriting existing archive...")
                 shutil.make_archive(outputFile, 'zip', TEMPDIRECTORY)
@@ -137,7 +136,6 @@ def readIgnoreFile():
             EXCLUDED.append(tuple([None,None,line.strip()]))
     file.close()
 
-
 def readManifestFile():
     if os.path.isfile('manifest.json'):
         with open('manifest.json','r') as file:
@@ -147,14 +145,8 @@ def readManifestFile():
         export = str(item['name']) + "-" + str(item['version'])
         return export
     else:
-        click.echo("No manifest.json file exists!")
+        click.echo("Exiting script, no manifest file found.")
         return None
-
-def debugPrint(path,directory_list,file_list):
-    print("Current Directory: ", "Base Directory" if path is None else path)
-    print("Sub Directories: " + str(directory_list))
-    print("Files: " + str(file_list))
-    print("---------------\n")
 
 def createTempDir():
     removeTempDir()
