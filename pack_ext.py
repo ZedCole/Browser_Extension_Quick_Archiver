@@ -8,8 +8,7 @@ TEMPDIRECTORY  = os.path.join(PARENTDIRECTORY,"ext_temp")
 CONFIGFILE = '.extensionpackignore'
 IGNOREDIRS = ['ext_temp','output','.git']
 IGNOREFILES = [CONFIGFILE,'.gitignore']
-EXCLUDED = [(None,None,'ignorethisfile.txt'),(None,'notme',None),
-            ('lol','ignorethisfolder',None),('lol',None,'pleaseignoreme.txt')] # (path, directory, file)
+EXCLUDED = [] # (path, directory, file)
 
 #### COMMAND LINE OPTIONS ####
 
@@ -21,21 +20,13 @@ EXCLUDED = [(None,None,'ignorethisfile.txt'),(None,'notme',None),
 def package(overwrite):
     filename = readManifestFile()
     if filename is not None:
+        readIgnoreFile()
         createTempDir()
         filesystemProcess()
         archive(filename,overwrite)
         removeTempDir()
     else:
         pass
-
-"""
-    TO DO:
-     - Functionality to read .extensionpackignore
-"""
-
-#### CURRENT WORKING AREA ####
-
-
 
 #### FILE SYSTEM OPERATIONS ####
 
@@ -120,6 +111,32 @@ def archive(archiveName,overwrite):
     os.chdir(PARENTDIRECTORY)
 
 #### UTILITY FUNCTIONS ####
+
+def readIgnoreFile():
+    with open(CONFIGFILE,'r') as file:
+        lines = file.readlines()
+
+    for line in lines:
+        if line.find('/') != -1:
+            seperator = '/'
+        elif line.find('\\') != -1:
+            seperator = '\\'
+        else:
+            seperator = None
+        
+        if seperator is not None:
+            newLine = line.strip().rsplit(seperator)
+            if len(newLine) == 2:
+                if newLine[1] == "":
+                    EXCLUDED.append(tuple([None,newLine[0],None]))
+                else:
+                    EXCLUDED.append(tuple([newLine[0],None,newLine[1]]))
+            else:
+                EXCLUDED.append(tuple([newLine[0],newLine[1],None]))
+        else:
+            EXCLUDED.append(tuple([None,None,line.strip()]))
+    file.close()
+
 
 def readManifestFile():
     if os.path.isfile('manifest.json'):
