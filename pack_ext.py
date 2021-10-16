@@ -5,7 +5,7 @@ from click.utils import echo
 
 PARENTDIRECTORY = os.getcwd()
 TEMPDIRECTORY  = os.path.join(PARENTDIRECTORY,"ext_temp")
-CONFIGFILE = '.extensionpackignore'
+CONFIGFILE = '.becignore'
 IGNOREDIRS = ['ext_temp','output','.git']
 IGNOREFILES = [CONFIGFILE,'.gitignore']
 EXCLUDED = [] # (path, directory, file)
