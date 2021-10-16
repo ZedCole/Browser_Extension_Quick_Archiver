@@ -1,58 +1,57 @@
 import click, os, shutil
-
 from click.utils import echo
+
+#### CONFIGURATION VARIABLES ####
 
 PARENTDIRECTORY = os.getcwd()
 TEMPDIRECTORY  = os.path.join(PARENTDIRECTORY,"ext_temp")
 CONFIGFILE = '.extensionpackignore'
 IGNOREDIRS = ['ext_temp','output','.git']
-IGNOREFILES = ['.extensionpackignore','.gitignore']
+IGNOREFILES = [CONFIGFILE,'.gitignore']
 EXCLUDED = [(None,None,'ignorethisfile.txt'),(None,'notme',None),
             ('lol','ignorethisfolder',None),('lol',None,'pleaseignoreme.txt')] # (path, directory, file)
 
+#### COMMAND LINE OPTIONS ####
+
 @click.command()
 @click.option('--overwrite', '-o', is_flag=True, help="Will overwrite if zip file for current version already exists.")
+
+#### MAIN LOOP ####
 
 def package(overwrite):
     removeTempDir()
     if overwrite:
         click.echo("Overwriting...")
     createTempDir()
-    checkDir()
+    filesystemProcess()
     # readPath()
-    # archive()
+    # archive('test2')
     # removeTempDir()
 
 """
     TO DO:
      - Create function to read manifest.json for name & version
+     - Functionality to read .extensionpackignore
 """
 
-def readconfig(config):
-    read = os.path.join(PARENTDIRECTORY, config)
-    file = open(read, 'r')
-    return file
+#### FILE SYSTEM OPERATIONS ####
 
-def readPath(root):
-    lenPar = len(str(PARENTDIRECTORY))
-    return root[lenPar + 1:]
-
-# run through directories & sub-directories
-def checkDir():
+# Walk through the subdirectories and recreate files and directories in ext_temp folder,
+# will ignore any files or directories in EXCLUDED, IGNOREDIRS, AND IGNOREFILES.
+def filesystemProcess():
     for root, dirs, files in os.walk(os.getcwd(), topdown=True):
-        dirs[:] = [d for d in dirs if d not in IGNOREDIRS]      # use these to remove other files & directories
-        files[:] = [f for f in files if f not in IGNOREFILES]   # copy what is left, just loop the array 
+        dirs[:] = [d for d in dirs if d not in IGNOREDIRS]
+        files[:] = [f for f in files if f not in IGNOREFILES]
         path = readPath(root)
         if path == "":
             path = None
         removeIgnoredFiles(path,files)
-        removeIgnoredDirectory(path,dirs)
-        debugPrint(path,dirs,files)
+        removeIgnoredDirectories(path,dirs)
+        # debugPrint(path,dirs,files)
         createDirectories(path,dirs)
         copyFiles(path,files)
-        print("---------------\n")
 
-def removeIgnoredDirectory(path,directory_list):
+def removeIgnoredDirectories(path,directory_list):
     for item in EXCLUDED:
         if item[0] == path and item[1] is not None:
             directory_list.remove(item[1])
@@ -60,7 +59,6 @@ def removeIgnoredDirectory(path,directory_list):
     return directory_list
 
 def removeIgnoredFiles(path,file_list):
-    # Check for *.extension expressions
     """Todo: add functionality for ignoring extensions i.e. *.log"""
     for item in EXCLUDED:
         if item[0] is None and item[2] is not None:
@@ -72,11 +70,6 @@ def removeIgnoredFiles(path,file_list):
             file_list.remove(item[2])
 
     return file_list
-
-def debugPrint(path,directory_list,file_list):
-    print("Current Directory: ", "Base Directory" if path is None else path)
-    print("Sub Directories: " + str(directory_list))
-    print("Files: " + str(file_list))
 
 def copyFiles(path,file_list):
     for file in file_list:
@@ -98,6 +91,14 @@ def createDirectories(path,directory_list):
             newDir = os.path.join(TEMPDIRECTORY,dir)
             os.mkdir(newDir)
 
+#### UTILITY FUNCTIONS ####
+
+def debugPrint(path,directory_list,file_list):
+    print("Current Directory: ", "Base Directory" if path is None else path)
+    print("Sub Directories: " + str(directory_list))
+    print("Files: " + str(file_list))
+    print("---------------\n")
+
 def createTempDir():
     os.mkdir(TEMPDIRECTORY)
 
@@ -107,10 +108,19 @@ def removeTempDir():
 
 def archive(archiveName):
     os.chdir(TEMPDIRECTORY)
-    # Check if output folder exists fist
-    outputFolder = os.path.join(PARENTDIRECTORY,'output')
-    outputFile = os.path.join(outputFolder,archiveName)
+    outputDirectory = os.path.join(PARENTDIRECTORY,'releases')
+    if os.path.isdir(outputDirectory):
+        pass
+    else:
+        os.mkdir(outputDirectory)
+    outputFile = os.path.join(outputDirectory,archiveName)
     shutil.make_archive(outputFile, 'zip', TEMPDIRECTORY)
+
+def readPath(root):
+    lenPar = len(str(PARENTDIRECTORY))
+    return root[lenPar + 1:]
+
+#### RUN SCRIPT ####
 
 if __name__ == '__main__':
     package()
