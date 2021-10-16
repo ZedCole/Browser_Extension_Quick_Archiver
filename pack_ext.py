@@ -49,6 +49,7 @@ def checkDir():
         removeIgnoredDirectory(path,dirs)
         debugPrint(path,dirs,files)
         createDirectories(path,dirs)
+        copyFiles(path,files)
         print("---------------\n")
 
 def removeIgnoredDirectory(path,directory_list):
@@ -77,6 +78,17 @@ def debugPrint(path,directory_list,file_list):
     print("Sub Directories: " + str(directory_list))
     print("Files: " + str(file_list))
 
+def copyFiles(path,file_list):
+    for file in file_list:
+        if path is not None:
+            srcFile = os.path.join(PARENTDIRECTORY,path,file)
+            destFile = os.path.join(TEMPDIRECTORY,path,file)
+        else:
+            srcFile = os.path.join(PARENTDIRECTORY,file)
+            destFile = os.path.join(TEMPDIRECTORY,file)
+        
+        shutil.copyfile(srcFile,destFile)
+
 def createDirectories(path,directory_list):
     for dir in directory_list:
         if path is not None:
@@ -92,11 +104,6 @@ def createTempDir():
 def removeTempDir():
     if os.path.isdir(TEMPDIRECTORY):
         shutil.rmtree(TEMPDIRECTORY)
-
-def copyFileItem(fileName):
-    srcFile = os.path.join(PARENTDIRECTORY, fileName)
-    destFile = os.path.join(TEMPDIRECTORY, fileName)
-    shutil.copyfile(srcFile, destFile)
 
 def archive(archiveName):
     os.chdir(TEMPDIRECTORY)
