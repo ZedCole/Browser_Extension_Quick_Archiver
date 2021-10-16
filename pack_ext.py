@@ -44,15 +44,13 @@ def checkDir():
         dirs[:] = [d for d in dirs if d not in IGNOREDIRS]      # use these to remove other files & directories
         files[:] = [f for f in files if f not in IGNOREFILES]   # copy what is left, just loop the array 
         path = readPath(root)
-        debugPrint(path,dirs,files)
-        
+        debugPrint(path,dirs,files)   
 
 def debugPrint(path,directory_list,file_list):
     print("Current Directory: ", "Base Directory" if path == "" else path)
     print("Sub Directories: " + str(directory_list))
     print("Files: " + str(file_list))
     print("---------------\n")
-
 
 def createTempDir():
     os.mkdir(TEMPDIRECTORY)
