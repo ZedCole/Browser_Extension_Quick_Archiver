@@ -1,4 +1,4 @@
-import click, os, shutil
+import click, os, shutil, json
 from click.utils import echo
 
 #### CONFIGURATION VARIABLES ####
@@ -19,18 +19,23 @@ EXCLUDED = [(None,None,'ignorethisfile.txt'),(None,'notme',None),
 #### MAIN LOOP ####
 
 def package(overwrite):
-    removeTempDir()
-    createTempDir()
-    filesystemProcess()
-    # readPath()
-    archive('test2',overwrite)
-    removeTempDir()
+    filename = readManifestFile()
+    if filename is not None:
+        createTempDir()
+        filesystemProcess()
+        archive(filename,overwrite)
+        removeTempDir()
+    else:
+        pass
 
 """
     TO DO:
-     - Create function to read manifest.json for name & version
      - Functionality to read .extensionpackignore
 """
+
+#### CURRENT WORKING AREA ####
+
+
 
 #### FILE SYSTEM OPERATIONS ####
 
@@ -116,6 +121,18 @@ def archive(archiveName,overwrite):
 
 #### UTILITY FUNCTIONS ####
 
+def readManifestFile():
+    if os.path.isfile('manifest.json'):
+        with open('manifest.json','r') as file:
+            data = file.read()
+        
+        item = json.loads(data)
+        export = str(item['name']) + "-" + str(item['version'])
+        return export
+    else:
+        click.echo("No manifest.json file exists!")
+        return None
+
 def debugPrint(path,directory_list,file_list):
     print("Current Directory: ", "Base Directory" if path is None else path)
     print("Sub Directories: " + str(directory_list))
@@ -123,6 +140,7 @@ def debugPrint(path,directory_list,file_list):
     print("---------------\n")
 
 def createTempDir():
+    removeTempDir()
     os.mkdir(TEMPDIRECTORY)
 
 def removeTempDir():
