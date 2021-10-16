@@ -1,49 +1,31 @@
-import click, os, shutil, json
+import click, os, shutil
 
 from click.utils import echo
 
 PARENTDIRECTORY = os.getcwd()
 TEMPDIRECTORY  = os.path.join(PARENTDIRECTORY,"ext_temp")
-CONFIGFILE = '.packignore'
+CONFIGFILE = '.extensionpackignore'
+IGNOREDIRS = ['ext_temp','output','.git']
+IGNOREFILES = ['.extensionpackignore','.gitignore']
+EXCLUDED = [(None,None,'ignorethisfile.txt'),(None,'notme',None),
+            ('lol','ignorethisfolder',None),('lol',None,'pleaseignoreme.txt')] # (path, directory, file)
 
 @click.command()
 @click.option('--overwrite', '-o', is_flag=True, help="Will overwrite if zip file for current version already exists.")
-@click.option('--conf', '-c', is_flag=True, help="Pass a config file.")
 
-# New direction to take script:
-# store files & directories in an array (check how to search directory recursively)
-# check current file against array
-# if it exists in the array ignore the current one
-# if id does not exist in the array copy the file
-
-# build a function to check the current line for "\/." and count that as a file (edge case "files that dont have extensions")
-# read each division and  enter into a set array (dir,file) 
-# do the appropriate
-
-# Rewrite this with final code
-def package(overwrite,conf):
+def package(overwrite):
+    removeTempDir()
     if overwrite:
         click.echo("Overwriting...")
-    click.echo("Temporary")
-    if conf:
-        file = readconfig(conf) #this is not done
-    else:
-        file = readconfig(CONFIGFILE)
-    for line in file:
-        print("Line " + ": " + line.strip())
+    createTempDir()
     checkDir()
-    # copyFileItem("test.txt")
-    # os.chdir(TEMPDIRECTORY)
+    # readPath()
     # archive()
-    # copyFileTree()
-    # createTempDir()
-    # removeTempDir()
+    removeTempDir()
 
 """
-    Create function to read a ext_pack.json file
-    Create function to read manifest.json for name & version
-    Loop through files needed
-    Delete ext_temp directory when done
+    TO DO:
+     - Create function to read manifest.json for name & version
 """
 
 def readconfig(config):
@@ -51,26 +33,33 @@ def readconfig(config):
     file = open(read, 'r')
     return file
 
-# use tuples? [(path, directory), (path, directory)]
-# only remove directory if it exists under path
+def readPath(root):
+    lenPar = len(str(PARENTDIRECTORY))
+    return root[lenPar + 1:]
+    # print(root[lenPar + 1:])
 
-excludeDir = ["notme","ignorethisfolder"]
-excludeFile = ["pleaseignoreme.txt",".packignore"]
 # run through directories & sub-directories
 def checkDir():
     for root, dirs, files in os.walk(os.getcwd(), topdown=True):
-        dirs[:] = [d for d in dirs if d not in excludeDir]
-        files[:] = [f for f in files if f not in excludeFile]
-        print(root)
-        print(dirs)
-        print(files)
-        print("-----------")
+        dirs[:] = [d for d in dirs if d not in IGNOREDIRS]      # use these to remove other files & directories
+        files[:] = [f for f in files if f not in IGNOREFILES]   # copy what is left, just loop the array 
+        path = readPath(root)
+        debugPrint(path,dirs,files)
+        
+
+def debugPrint(path,directory_list,file_list):
+    print("Current Directory: ", "Base Directory" if path == "" else path)
+    print("Sub Directories: " + str(directory_list))
+    print("Files: " + str(file_list))
+    print("---------------\n")
+
 
 def createTempDir():
     os.mkdir(TEMPDIRECTORY)
 
 def removeTempDir():
-    shutil.rmtree(TEMPDIRECTORY)
+    if os.path.isdir(TEMPDIRECTORY):
+        shutil.rmtree(TEMPDIRECTORY)
 
 def copyFileItem(fileName):
     srcFile = os.path.join(PARENTDIRECTORY, fileName)
@@ -78,6 +67,8 @@ def copyFileItem(fileName):
     shutil.copyfile(srcFile, destFile)
 
 def archive(archiveName):
+    os.chdir(TEMPDIRECTORY)
+    # Check if output folder exists fist
     outputFolder = os.path.join(PARENTDIRECTORY,'output')
     outputFile = os.path.join(outputFolder,archiveName)
     shutil.make_archive(outputFile, 'zip', TEMPDIRECTORY)
