@@ -21,7 +21,7 @@ def package(overwrite):
     checkDir()
     # readPath()
     # archive()
-    removeTempDir()
+    # removeTempDir()
 
 """
     TO DO:
@@ -45,9 +45,10 @@ def checkDir():
         path = readPath(root)
         if path == "":
             path = None
+        removeIgnoredFiles(path,files)
+        removeIgnoredDirectory(path,dirs)
         debugPrint(path,dirs,files)
-        print(removeIgnoredFiles(path,files))
-        print(removeIgnoredDirectory(path,dirs))
+        createDirectories(path,dirs)
         print("---------------\n")
 
 def removeIgnoredDirectory(path,directory_list):
@@ -67,7 +68,6 @@ def removeIgnoredFiles(path,file_list):
             except:
                 pass
         elif item[0] == path and item[2] is not None:
-            print(item[2])
             file_list.remove(item[2])
 
     return file_list
@@ -76,6 +76,15 @@ def debugPrint(path,directory_list,file_list):
     print("Current Directory: ", "Base Directory" if path is None else path)
     print("Sub Directories: " + str(directory_list))
     print("Files: " + str(file_list))
+
+def createDirectories(path,directory_list):
+    for dir in directory_list:
+        if path is not None:
+            newDir = os.path.join(TEMPDIRECTORY,path,dir)
+            os.mkdir(newDir)
+        else:
+            newDir = os.path.join(TEMPDIRECTORY,dir)
+            os.mkdir(newDir)
 
 def createTempDir():
     os.mkdir(TEMPDIRECTORY)
