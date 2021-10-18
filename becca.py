@@ -3,11 +3,11 @@ from click.utils import echo
 
 #### CONFIGURATION VARIABLES ####
 
-PARENTDIRECTORY = os.getcwd()
-TEMPDIRECTORY  = os.path.join(PARENTDIRECTORY,"ext_temp")
 CONFIGFILE = '.becignore'
-IGNOREDIRS = ['ext_temp','output','.git']
+IGNOREDIRS = ['ext_temp','release','.git'] # [TEMP FOLDER, ARCIVE FOLDER, GIT]
 IGNOREFILES = [CONFIGFILE,'.gitignore']
+PARENTDIRECTORY = os.getcwd()
+TEMPDIRECTORY  = os.path.join(PARENTDIRECTORY,IGNOREDIRS[0])
 EXCLUDED = [] # (path, directory, file)
 
 #### COMMAND LINE OPTIONS ####
@@ -54,7 +54,15 @@ def removeIgnoredDirectories(path,directory_list):
 def removeIgnoredFiles(path,file_list):
     """Todo: add functionality for ignoring extensions i.e. *.log"""
     for item in EXCLUDED:
-        if item[0] is None and item[2] is not None:
+        if item[0] is None and str(item[2]).find("*") != -1:
+            ignoreFiles = str(item[2]).split(".")
+            print(file_list)
+            for file in file_list: # change to while loop?
+                find = file.split(".")
+                if find[1] == ignoreFiles[1]:
+                    print(file)
+                    file_list.remove(file)
+        elif item[0] is None and item[2] is not None:
             try:
                 file_list.remove(item[2])
             except:
@@ -86,7 +94,7 @@ def createDirectories(path,directory_list):
 
 def archive(archiveName,overwrite):
     os.chdir(TEMPDIRECTORY)
-    outputDirectory = os.path.join(PARENTDIRECTORY,'releases')
+    outputDirectory = os.path.join(PARENTDIRECTORY,IGNOREDIRS[1])
     if os.path.isdir(outputDirectory):
         pass
     else:
