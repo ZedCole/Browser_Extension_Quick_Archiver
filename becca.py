@@ -52,7 +52,6 @@ def removeIgnoredDirectories(path,directory_list):
     return directory_list
 
 def removeIgnoredFiles(path,file_list):
-    """Todo: add functionality for ignoring extensions i.e. *.log"""
     for item in EXCLUDED:
         if item[0] is None and str(item[2]).find("*") != -1:
             ignoreFiles = str(item[2]).split(".")
@@ -60,6 +59,15 @@ def removeIgnoredFiles(path,file_list):
                 extension = file.split(".")
                 if extension[1] == ignoreFiles[1]:
                     file_list.remove(file)
+        elif str(item[2]).find("!") != -1:
+            file = str(item[2]).split("!")
+            if path is not None:
+                keep_file = os.path.join(PARENTDIRECTORY,path,file[1])
+            else:
+                keep_file = os.path.join(PARENTDIRECTORY,file[1])
+            
+            if os.path.isfile(keep_file) and file_list.count(file[1]) == 0:
+                file_list.append(file[1])
         elif item[0] is None and item[2] is not None:
             try:
                 file_list.remove(item[2])
@@ -67,6 +75,7 @@ def removeIgnoredFiles(path,file_list):
                 pass
         elif item[0] == path and item[2] is not None:
             file_list.remove(item[2])
+    print(file_list)
     return file_list
 
 def copyFiles(path,file_list):
@@ -120,6 +129,7 @@ def readIgnoreFile():
     with open(CONFIGFILE,'r') as file:
         lines = file.readlines()
 
+    lines.sort(reverse=True)
     for line in lines:
         if line.find('/') != -1:
             seperator = '/'
