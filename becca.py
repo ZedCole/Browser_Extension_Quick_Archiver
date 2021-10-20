@@ -57,8 +57,8 @@ def removeIgnoredFiles(path,file_list):
         if item[0] is None and str(item[2]).find("*") != -1:
             ignoreFiles = str(item[2]).split(".")
             for file in reversed(file_list):
-                find = file.split(".")
-                if find[1] == ignoreFiles[1]:
+                extension = file.split(".")
+                if extension[1] == ignoreFiles[1]:
                     file_list.remove(file)
         elif item[0] is None and item[2] is not None:
             try:
@@ -67,7 +67,6 @@ def removeIgnoredFiles(path,file_list):
                 pass
         elif item[0] == path and item[2] is not None:
             file_list.remove(item[2])
-
     return file_list
 
 def copyFiles(path,file_list):
