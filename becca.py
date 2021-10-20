@@ -56,11 +56,9 @@ def removeIgnoredFiles(path,file_list):
     for item in EXCLUDED:
         if item[0] is None and str(item[2]).find("*") != -1:
             ignoreFiles = str(item[2]).split(".")
-            print(file_list)
-            for file in file_list: # change to while loop?
+            for file in reversed(file_list):
                 find = file.split(".")
                 if find[1] == ignoreFiles[1]:
-                    print(file)
                     file_list.remove(file)
         elif item[0] is None and item[2] is not None:
             try:
