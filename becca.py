@@ -33,7 +33,7 @@ def package(overwrite):
 
 #### FILE SYSTEM OPERATIONS ####
 
-# Walk through the subdirectories and recreate files and directories in ext_temp folder,
+# Walk through the subdirectories and recreate files and directories in IGNORE_DIRS[0] folder,
 # will ignore any files or directories in EXCLUDED, IGNOREDIRS, AND IGNOREFILES.
 def filesystem_process():
     for root, dirs, files in os.walk(os.getcwd(), topdown=True):
