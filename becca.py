@@ -7,7 +7,7 @@ from click.utils import echo
 #### CONFIGURATION VARIABLES ####
 
 CONFIG_FILE = '.becignore'
-IGNORE_DIRS = ['ext_temp', 'release', '.git'] # [TEMP FOLDER, ARCIVE FOLDER, GIT]
+IGNORE_DIRS = ['bectmp', 'release', '.git'] # [TEMP FOLDER, ARCIVE FOLDER, GIT]
 IGNORE_FILES = [CONFIG_FILE, '.gitignore']
 PARENT_DIRECTORY = os.getcwd()
 TEMP_DIRECTORY = os.path.join(PARENT_DIRECTORY, IGNORE_DIRS[0])
