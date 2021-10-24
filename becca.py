@@ -1,71 +1,76 @@
-import click, os, shutil, json
+import click
+import os
+import shutil
+import json
 from click.utils import echo
 
 #### CONFIGURATION VARIABLES ####
 
-CONFIGFILE = '.becignore'
-IGNOREDIRS = ['ext_temp','release','.git'] # [TEMP FOLDER, ARCIVE FOLDER, GIT]
-IGNOREFILES = [CONFIGFILE,'.gitignore']
-PARENTDIRECTORY = os.getcwd()
-TEMPDIRECTORY  = os.path.join(PARENTDIRECTORY,IGNOREDIRS[0])
-EXCLUDED = [] # (path, directory, file)
+CONFIG_FILE = '.becignore'
+IGNORE_DIRS = ['ext_temp', 'release', '.git'] # [TEMP FOLDER, ARCIVE FOLDER, GIT]
+IGNORE_FILES = [CONFIG_FILE, '.gitignore']
+PARENT_DIRECTORY = os.getcwd()
+TEMP_DIRECTORY = os.path.join(PARENT_DIRECTORY, IGNORE_DIRS[0])
+EXCLUDED = []  # (path, directory, file)
 
 #### COMMAND LINE OPTIONS ####
-
 @click.command()
 @click.option('--overwrite', '-o', is_flag=True, help="Will overwrite if zip file for current version already exists.")
 
-#### MAIN LOOP ####
 
+#### MAIN LOOP ####
 def package(overwrite):
-    filename = readManifestFile()
+    filename = read_manifest_file()
     if filename is not None:
-        readIgnoreFile()
-        createTempDir()
-        filesystemProcess()
-        archive(filename,overwrite)
-        removeTempDir()
+        read_ignore_file()
+        create_temp_dir()
+        filesystem_process()
+        archive(filename, overwrite)
+        remove_temp_dir()
     else:
         pass
+
 
 #### FILE SYSTEM OPERATIONS ####
 
 # Walk through the subdirectories and recreate files and directories in ext_temp folder,
 # will ignore any files or directories in EXCLUDED, IGNOREDIRS, AND IGNOREFILES.
-def filesystemProcess():
+def filesystem_process():
     for root, dirs, files in os.walk(os.getcwd(), topdown=True):
-        dirs[:] = [d for d in dirs if d not in IGNOREDIRS]
-        files[:] = [f for f in files if f not in IGNOREFILES]
-        path = readPath(root)
+        dirs[:] = [d for d in dirs if d not in IGNORE_DIRS]
+        files[:] = [f for f in files if f not in IGNORE_FILES]
+        path = read_path(root)
         if path == "":
             path = None
-        removeIgnoredFiles(path,files)
-        removeIgnoredDirectories(path,dirs)
-        createDirectories(path,dirs)
-        copyFiles(path,files)
+        remove_ignored_files(path, files)
+        remove_ignored_directories(path, dirs)
+        create_directories(path, dirs)
+        copy_files(path, files)
 
-def removeIgnoredDirectories(path,directory_list):
+
+def remove_ignored_directories(path, directory_list):
     for item in EXCLUDED:
         if item[0] == path and item[1] is not None:
             directory_list.remove(item[1])
-    
+
     return directory_list
 
-def removeIgnoredFiles(path,file_list):
+
+def remove_ignored_files(path, file_list):
     for item in EXCLUDED:
         if item[0] is None and str(item[2]).find("*") != -1:
-            ignoreFiles = str(item[2]).split(".")
+            ignore_files = str(item[2]).split(".")
             for file in reversed(file_list):
                 extension = file.split(".")
-                if extension[1] == ignoreFiles[1]:
+                if extension[1] == ignore_files[1]:
                     file_list.remove(file)
         elif str(item[2]).find("!") != -1:
             file = str(item[2]).split("!")
             if path is not None:
-                keep_file = os.path.join(PARENTDIRECTORY,path,file[1])
+                keep_file = os.path.join(PARENT_DIRECTORY, path, file[1])
             else:
-                keep_file = os.path.join(PARENTDIRECTORY,file[1])
-            
+                keep_file = os.path.join(PARENT_DIRECTORY, file[1])
+
             if os.path.isfile(keep_file) and file_list.count(file[1]) == 0:
                 file_list.append(file[1])
         elif item[0] is None and item[2] is not None:
@@ -75,58 +80,62 @@ def removeIgnoredFiles(path,file_list):
                 pass
         elif item[0] == path and item[2] is not None:
             file_list.remove(item[2])
-    print(file_list)
     return file_list
 
-def copyFiles(path,file_list):
+
+def copy_files(path, file_list):
     for file in file_list:
         if path is not None:
-            srcFile = os.path.join(PARENTDIRECTORY,path,file)
-            destFile = os.path.join(TEMPDIRECTORY,path,file)
+            src_file = os.path.join(PARENT_DIRECTORY, path, file)
+            dest_file = os.path.join(TEMP_DIRECTORY, path, file)
         else:
-            srcFile = os.path.join(PARENTDIRECTORY,file)
-            destFile = os.path.join(TEMPDIRECTORY,file)
-        
-        shutil.copyfile(srcFile,destFile)
+            src_file = os.path.join(PARENT_DIRECTORY, file)
+            dest_file = os.path.join(TEMP_DIRECTORY, file)
 
-def createDirectories(path,directory_list):
+        shutil.copyfile(src_file, dest_file)
+
+
+def create_directories(path, directory_list):
     for dir in directory_list:
         if path is not None:
-            newDir = os.path.join(TEMPDIRECTORY,path,dir)
-            os.mkdir(newDir)
+            new_dir = os.path.join(TEMP_DIRECTORY, path, dir)
+            os.mkdir(new_dir)
         else:
-            newDir = os.path.join(TEMPDIRECTORY,dir)
-            os.mkdir(newDir)
+            new_dir = os.path.join(TEMP_DIRECTORY, dir)
+            os.mkdir(new_dir)
 
-def archive(archiveName,overwrite):
-    os.chdir(TEMPDIRECTORY)
-    outputDirectory = os.path.join(PARENTDIRECTORY,IGNOREDIRS[1])
-    if os.path.isdir(outputDirectory):
+
+def archive(archive_name, overwrite):
+    os.chdir(TEMP_DIRECTORY)
+    output_directory = os.path.join(PARENT_DIRECTORY, IGNORE_DIRS[1])
+    if os.path.isdir(output_directory):
         pass
     else:
-        os.mkdir(outputDirectory)
-    
-    outputFile = os.path.join(outputDirectory,archiveName)
+        os.mkdir(output_directory)
+
+    output_file = os.path.join(output_directory, archive_name)
 
     if overwrite:
-        shutil.make_archive(outputFile, 'zip', TEMPDIRECTORY)
+        shutil.make_archive(output_file, 'zip', TEMP_DIRECTORY)
     else:
-        if os.path.isfile(outputFile+'.zip'):
-            click.echo("An archive file already exists for: \"" + archiveName + '.zip\"')
+        if os.path.isfile(output_file+'.zip'):
+            click.echo("An archive file already exists for: \"" +
+                       archive_name + '.zip\"')
             if click.confirm("Would you like to continue?: "):
                 click.echo("Overwriting existing archive...")
-                shutil.make_archive(outputFile, 'zip', TEMPDIRECTORY)
+                shutil.make_archive(output_file, 'zip', TEMP_DIRECTORY)
             else:
                 pass
         else:
-            shutil.make_archive(outputFile, 'zip', TEMPDIRECTORY)
-    
-    os.chdir(PARENTDIRECTORY)
+            shutil.make_archive(output_file, 'zip', TEMP_DIRECTORY)
+
+    os.chdir(PARENT_DIRECTORY)
+
 
 #### UTILITY FUNCTIONS ####
 
-def readIgnoreFile():
-    with open(CONFIGFILE,'r') as file:
+def read_ignore_file():
+    with open(CONFIG_FILE, 'r') as file:
         lines = file.readlines()
 
     lines.sort(reverse=True)
@@ -137,25 +146,26 @@ def readIgnoreFile():
             seperator = '\\'
         else:
             seperator = None
-        
+
         if seperator is not None:
-            newLine = line.strip().rsplit(seperator)
-            if len(newLine) == 2:
-                if newLine[1] == "":
-                    EXCLUDED.append(tuple([None,newLine[0],None]))
+            new_line = line.strip().rsplit(seperator)
+            if len(new_line) == 2:
+                if new_line[1] == "":
+                    EXCLUDED.append(tuple([None, new_line[0], None]))
                 else:
-                    EXCLUDED.append(tuple([newLine[0],None,newLine[1]]))
+                    EXCLUDED.append(tuple([new_line[0], None, new_line[1]]))
             else:
-                EXCLUDED.append(tuple([newLine[0],newLine[1],None]))
+                EXCLUDED.append(tuple([new_line[0], new_line[1], None]))
         else:
-            EXCLUDED.append(tuple([None,None,line.strip()]))
+            EXCLUDED.append(tuple([None, None, line.strip()]))
     file.close()
 
-def readManifestFile():
+
+def read_manifest_file():
     if os.path.isfile('manifest.json'):
-        with open('manifest.json','r') as file:
+        with open('manifest.json', 'r') as file:
             data = file.read()
-        
+
         item = json.loads(data)
         export = str(item['name']) + "-" + str(item['version'])
         return export
@@ -163,17 +173,21 @@ def readManifestFile():
         click.echo("Exiting script, no manifest file found.")
         return None
 
-def createTempDir():
-    removeTempDir()
-    os.mkdir(TEMPDIRECTORY)
 
-def removeTempDir():
-    if os.path.isdir(TEMPDIRECTORY):
-        shutil.rmtree(TEMPDIRECTORY)
+def create_temp_dir():
+    remove_temp_dir()
+    os.mkdir(TEMP_DIRECTORY)
 
-def readPath(root):
-    lenPar = len(str(PARENTDIRECTORY))
-    return root[lenPar + 1:]
+
+def remove_temp_dir():
+    if os.path.isdir(TEMP_DIRECTORY):
+        shutil.rmtree(TEMP_DIRECTORY)
+
+
+def read_path(root):
+    len_par = len(str(PARENT_DIRECTORY))
+    return root[len_par + 1:]
+
 
 #### RUN SCRIPT ####
 
